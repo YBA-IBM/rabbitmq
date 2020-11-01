@@ -2,15 +2,7 @@
 # especially for the enterprises that we, the RabbitMQ team, have to deal with
 FROM quay.io/ibmz/ubuntu:18.04
 
-RUN set -eux; \
-	apt-get update; \
-	apt-get install -y --no-install-recommends \
-# grab gosu for easy step-down from root
-		gosu \
-	; \
-	rm -rf /var/lib/apt/lists/*; \
-# verify that the "gosu" binary works
-	gosu nobody true
+
 
 # Default to a PGP keyserver that pgp-happy-eyeballs recognizes, but allow for substitutions locally
 ARG PGP_KEYSERVER=ha.pool.sks-keyservers.net
@@ -30,13 +22,35 @@ ENV OTP_VERSION 23.1.1
 # http://erlang.org/pipermail/erlang-questions/2019-January/097067.html
 ENV OTP_SOURCE_SHA256="8094484d94bce21d76f3a6c6137098839e7bc121e170c08b472f980296684ac9"
 
+
+ENV RABBITMQ_DATA_DIR=/var/lib/rabbitmq
+
+# Use the latest stable RabbitMQ release (https://www.rabbitmq.com/download.html)
+ENV RABBITMQ_VERSION 3.8.9
+# https://www.rabbitmq.com/signatures.html#importing-gpg
+ENV RABBITMQ_PGP_KEY_ID="0x0A9AF2115F4687BD29803A206B73A36E6026DFCA"
+ENV RABBITMQ_HOME=/opt/rabbitmq
+
+# Add RabbitMQ to PATH, send all logs to TTY
+ENV PATH=$RABBITMQ_HOME/sbin:$PATH \
+	RABBITMQ_LOGS=-
+
+
+RUN set -eux; \
+	apt-get update; \
+	apt-get install -y --no-install-recommends \
+# grab gosu for easy step-down from root
+		gosu \
+	; \
+	rm -rf /var/lib/apt/lists/*; \
+# verify that the "gosu" binary works
+	gosu nobody true \ 
 # Install dependencies required to build Erlang/OTP from source
 # http://erlang.org/doc/installation_guide/INSTALL.html
 # autoconf: Required to configure Erlang/OTP before compiling
 # dpkg-dev: Required to set up host & build type when compiling Erlang/OTP
 # gnupg: Required to verify OpenSSL artefacts
 # libncurses5-dev: Required for Erlang/OTP new shell & observer_cli - https://github.com/zhongwencool/observer_cli
-RUN set -eux; \
 	\
 	savedAptMark="$(apt-mark showmanual)"; \
 	apt-get update; \
@@ -178,30 +192,18 @@ RUN set -eux; \
 # Check that OpenSSL still works after purging build dependencies
 	openssl version; \
 # Check that Erlang/OTP crypto & ssl were compiled against OpenSSL correctly
-	erl -noshell -eval 'io:format("~p~n~n~p~n~n", [crypto:supports(), ssl:versions()]), init:stop().'
-
-ENV RABBITMQ_DATA_DIR=/var/lib/rabbitmq
+	erl -noshell -eval 'io:format("~p~n~n~p~n~n", [crypto:supports(), ssl:versions()]), init:stop().' \
+\
 # Create rabbitmq system user & group, fix permissions & allow root user to connect to the RabbitMQ Erlang VM
-RUN set -eux; \
 	groupadd --gid 999 --system rabbitmq; \
 	useradd --uid 999 --system --home-dir "$RABBITMQ_DATA_DIR" --gid rabbitmq rabbitmq; \
 	mkdir -p "$RABBITMQ_DATA_DIR" /etc/rabbitmq /etc/rabbitmq/conf.d /tmp/rabbitmq-ssl /var/log/rabbitmq; \
 	chown -fR rabbitmq:rabbitmq "$RABBITMQ_DATA_DIR" /etc/rabbitmq /etc/rabbitmq/conf.d /tmp/rabbitmq-ssl /var/log/rabbitmq; \
 	chmod 777 "$RABBITMQ_DATA_DIR" /etc/rabbitmq /etc/rabbitmq/conf.d /tmp/rabbitmq-ssl /var/log/rabbitmq; \
-	ln -sf "$RABBITMQ_DATA_DIR/.erlang.cookie" /root/.erlang.cookie
-
-# Use the latest stable RabbitMQ release (https://www.rabbitmq.com/download.html)
-ENV RABBITMQ_VERSION 3.8.9
-# https://www.rabbitmq.com/signatures.html#importing-gpg
-ENV RABBITMQ_PGP_KEY_ID="0x0A9AF2115F4687BD29803A206B73A36E6026DFCA"
-ENV RABBITMQ_HOME=/opt/rabbitmq
-
-# Add RabbitMQ to PATH, send all logs to TTY
-ENV PATH=$RABBITMQ_HOME/sbin:$PATH \
-	RABBITMQ_LOGS=-
-
+	ln -sf "$RABBITMQ_DATA_DIR/.erlang.cookie" /root/.erlang.cookie \
+\
+\
 # Install RabbitMQ
-RUN set -eux; \
 	\
 	savedAptMark="$(apt-mark showmanual)"; \
 	apt-get update; \
@@ -246,10 +248,9 @@ RUN set -eux; \
 	gosu rabbitmq rabbitmqctl list_ciphers; \
 	gosu rabbitmq rabbitmq-plugins list; \
 # no stale cookies
-	rm "$RABBITMQ_DATA_DIR/.erlang.cookie"
-
+	rm "$RABBITMQ_DATA_DIR/.erlang.cookie"\
+\
 # Enable Prometheus-style metrics by default (https://github.com/docker-library/rabbitmq/issues/419)
-RUN set -eux; \
 	rabbitmq-plugins enable --offline rabbitmq_prometheus; \
 	echo 'management_agent.disable_metrics_collector = true' > /etc/rabbitmq/conf.d/management_agent.disable_metrics_collector.conf
 
