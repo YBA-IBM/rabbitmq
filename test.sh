@@ -14,7 +14,10 @@ docker logs some-rabbit
 docker stop some-rabbit && docker rm some-rabbit
 docker network create some-network
 docker run -d --hostname some-rabbit --name some-rabbit --network some-network -e RABBITMQ_ERLANG_COOKIE='secret cookie here' quay.io/ibmz/rabbitmq:3.8.9
+echo "Debug 0"
 docker run -i --rm --network some-network -e RABBITMQ_ERLANG_COOKIE='secret cookie here' quay.io/ibmz/rabbitmq:3.8.9 rabbitmqctl -n rabbit@some-rabbit list_users
+echo "Debug 1"
 docker run -i --rm --network some-network -e RABBITMQ_ERLANG_COOKIE='secret cookie here' -e RABBITMQ_NODENAME=rabbit@some-rabbit quay.io/ibmz/rabbitmq:3.8.9 rabbitmqctl list_users
+echo "Debug 2"
 
 echo -e "\n $ANSI_GREEN *** FUNCTIONAL TEST(S) COMPLETED SUCESSFULLY *** $ANSI_RESET \n"
