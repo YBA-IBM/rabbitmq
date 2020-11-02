@@ -1,4 +1,4 @@
-FROM rabbitmq:3.8
+FROM quay.io/ibmz/rabbitmq:3.8.9
 
 RUN rabbitmq-plugins enable --offline rabbitmq_management
 
