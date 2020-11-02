@@ -5,9 +5,9 @@ env:
   global:
     - TEST_DIR="$PWD/"
     - TEST_SCRIPT="test.sh"
-    - BUILD_DIR="$PWD/3.8/ubuntu/"
+    - BUILD_DIR="$PWD/3.8/ubuntu/management/"
     - REPO="quay.io/ibmz/rabbitmq"
-    - TAG="$REPO:3.8.9"
+    - TAG="$REPO:3.8.9-management"
 before_script: 
   - cd $TEST_DIR && chmod +x $TEST_SCRIPT
   - docker login quay.io -u $ROBOT -p $ROBOT_TOKEN
