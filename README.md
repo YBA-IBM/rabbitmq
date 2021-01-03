@@ -1,9 +1,12 @@
+### This image is built to run on s390x architecture.
+-    [build source](https://github.com/YBA-IBM/rabbitmq)
+-    [original source code](https://github.com/docker-library/rabbitmq)
 
 # Tags
--	[`3.8.9`](https://github.com/YBA-IBM/rabbitmq/blob/master/3.8/ubuntu/Dockerfile)
+-	[`3.8.9`]
 
 
-# What is RabbitMQ?
+# RabbitMQ
 
 RabbitMQ is open source message broker software (sometimes called message-oriented middleware) that implements the Advanced Message Queuing Protocol (AMQP). The RabbitMQ server is written in the Erlang programming language and is built on the Open Telecom Platform framework for clustering and failover. Client libraries to interface with the broker are available for all major programming languages.
 
